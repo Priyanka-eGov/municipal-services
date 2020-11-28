@@ -669,7 +669,7 @@ public class DemandService {
 					details.add(DemandDetail.builder().taxHeadMasterCode(entry.getKey()).taxAmount(netAmount)
 							.collectionAmount(BigDecimal.ZERO).tenantId(tenantId).build());
 				} else {
-					details.add(DemandDetail.builder().taxHeadMasterCode(entry.getKey()).taxAmount(taxAmount)
+					details.add(DemandDetail.builder().taxHeadMasterCode(entry.getKey()).taxAmount(BigDecimal.ZERO)
 							.collectionAmount(collectionAmount).tenantId(tenantId).build());
 				}
 
