@@ -622,17 +622,25 @@ public class DemandService {
 			List<DemandDetail> detailList = taxHeadCodeDetailMap.get(estimate.getTaxHeadCode());
 			taxHeadCodeDetailMap.remove(estimate.getTaxHeadCode());
 
-			if (estimate.getTaxHeadCode().equalsIgnoreCase(CalculatorConstants.PT_ADVANCE_CARRYFORWARD))
+			if (estimate.getTaxHeadCode().equalsIgnoreCase(CalculatorConstants.PT_ADVANCE_CARRYFORWARD) )
 				continue;
 
 			if(!CollectionUtils.isEmpty(detailList)){
 				details.addAll(detailList);
 				BigDecimal amount= detailList.stream().map(DemandDetail::getTaxAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
-
+				if (estimate.getTaxHeadCode().equalsIgnoreCase(CalculatorConstants.PT_ROUNDOFF) ) {
+					BigDecimal collectedAmount= detailList.stream().map(DemandDetail::getCollectionAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+					BigDecimal taxAmount = detailList.stream().map(DemandDetail::getTaxAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+					details.add(DemandDetail.builder().taxHeadMasterCode(estimate.getTaxHeadCode())
+							.taxAmount(taxAmount)
+							.collectionAmount(collectedAmount)
+							.tenantId(tenantId).build());
+				}else {
 				details.add(DemandDetail.builder().taxHeadMasterCode(estimate.getTaxHeadCode())
 						.taxAmount(estimate.getEstimateAmount().subtract(amount))
 						.collectionAmount(BigDecimal.ZERO)
 						.tenantId(tenantId).build());
+				}
 			}
 			else{
 				details.add(DemandDetail.builder().taxHeadMasterCode(estimate.getTaxHeadCode())
@@ -653,17 +661,13 @@ public class DemandService {
 			BigDecimal taxAmount= demandDetails.stream().map(DemandDetail::getTaxAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
 			BigDecimal collectionAmount= demandDetails.stream().map(DemandDetail::getCollectionAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
 			BigDecimal netAmount = collectionAmount.subtract(taxAmount);
-			if(demandDetails!=null && demandDetails.size()>0 && !demandDetails.get(0).getTaxHeadMasterCode().equalsIgnoreCase(PT_ROUNDOFF)) {
+			
+			
 			details.add(DemandDetail.builder().taxHeadMasterCode(entry.getKey())
 					.taxAmount(netAmount)
 					.collectionAmount(BigDecimal.ZERO)
 					.tenantId(tenantId).build());
-		}else {
-			details.add(DemandDetail.builder().taxHeadMasterCode(entry.getKey())
-					.taxAmount(taxAmount)
-					.collectionAmount(collectionAmount)
-					.tenantId(tenantId).build());
-		}
+			
 		}
 		return details;
 	}
